@@ -254,15 +254,15 @@ try:
                     st.write("Video Data Stored Succesfully")
                     st.write("Comment Data Stored Succesfully")
                     db.commit()
-                    st.write(chStatus)
+                    #st.write(chStatus)
                 else:
                     errorStatement="Data Integrety Error From The source , Please try this ID after some time"
-                    st.write(chStatus)
+                    #st.write(chStatus)
             elif gate==0:
                 st.write("The Channel ID is Entered Already , Please try next ID")
 except: 
         # Prevent the error from propagating into your Streamlit app.
-        #st.write(errorStatement)
+        st.write(errorStatement)
         pass
 
 #view = st.button("View Tables")
