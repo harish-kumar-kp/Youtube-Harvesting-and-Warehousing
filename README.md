@@ -45,7 +45,7 @@ pip install streamlit
 
 To use this project, follow these steps:
 
-1. Clone the repository: ```git clone https://github.com/gopiashokan/Youtube-Harvesting-and-Warehousing.git```
+1. Clone the repository: ```git clone https://github.com/harish-kumar-kp/Youtube-Harvesting-and-Warehousing```
 2. Install the required packages and libraries : ```pip install -r requirements.txt```
 3. Launch the landingPage with Streamlit and Entering the Youtube channel id on concluding pages: ```streamlit run Home.py```
 4. Access the app in your browser at ```http://localhost:8501```
