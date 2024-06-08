@@ -52,7 +52,7 @@ To use this project, follow these steps:
 
 <br />
 
-**Operating Procedure**
+**Features**
 
  **How to Get API Key:** [https://www.youtube.com/watch?v=brCkpzAD0gc](https://www.youtube.com/watch?v=brCkpzAD0gc)
 
