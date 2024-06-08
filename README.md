@@ -67,7 +67,7 @@ To use this project, follow these steps:
 - **Video Analysis:** Video analytics on views, likes, comments, and durations, enabling both an overall channel and specific channel perspectives. Leverage visual representations and metrics to extract valuable insights from individual videos.
 
 
-🎬 𝗣𝗿𝗼𝗷𝗲𝗰𝘁 𝗗𝗲𝗺𝗼 𝗩𝗶𝗱𝗲𝗼: [https://youtu.be/vO5ci9CaFUI](https://youtu.be/vO5ci9CaFUI)
+🎬 𝗣𝗿𝗼𝗷𝗲𝗰𝘁 𝗗𝗲𝗺𝗼 𝗩𝗶𝗱𝗲𝗼: [https://www.youtube.com/watch?v=HVDnJR51FCM](https://www.youtube.com/watch?v=HVDnJR51FCM)
 
 <br />
 
