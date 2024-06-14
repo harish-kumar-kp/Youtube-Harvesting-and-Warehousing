@@ -10,10 +10,10 @@ import re
 import mysql.connector 
 # Python MySQL connection
 db = mysql.connector.connect(
-    host =fileConfig["key1"],  #can be changed with own your Values as well
-    user = fileConfig["key2"],  #can be changed with own your Values as well
-    passwd = fileConfig["key3"],  #can be changed with own your Values as well
-    database = fileConfig["key4"]  #can be changed with own your Values as well
+    host =fileConfig["key1"],
+    user = fileConfig["key2"],
+    passwd = fileConfig["key3"],
+    database = fileConfig["key4"]
 )
 
 #creating cursor object
@@ -22,7 +22,7 @@ mycursor = db.cursor()
 api_service_name = "youtube"
 api_version = "v3"
 
-apiKey =fileConfig["key5"]  #can be changed with own your Values as well
+apiKey =fileConfig["key5"]
 youtube = googleapiclient.discovery.build(api_service_name, 
                                           api_version,
                                           developerKey=apiKey)
@@ -365,8 +365,8 @@ try:
 except: 
         # Prevent the error from propagating into your Streamlit app.
         #st.write(errorStatement)
-        st.write("Data Integrety Error From The source , Please try next chnnel ID ")
-        Click = st.button("Continue")
+        st.write("Data Integrety Error From The source :pensive:")
+        Click = st.button("Please try next chnnel ID")
         if submit:
                 pass
 
