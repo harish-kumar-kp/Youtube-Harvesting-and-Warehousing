@@ -12,38 +12,39 @@ import mysql.connector
 fileConfig = data_IO.config()
 # Python MySQL connection
 db = mysql.connector.connect(
-    host =fileConfig["key1"],
-    user = fileConfig["key2"],
-    passwd = fileConfig["key3"],
-    database = fileConfig["key4"]
+    host =fileConfig["key1"], #can be changed with own your Values as well
+    user = fileConfig["key2"], #can be changed with own your Values as well
+    passwd = fileConfig["key3"], #can be changed with own your Values as well
+    database = fileConfig["key4"] #can be changed with own your Values as well
 )
 
 mycursor = db.cursor()#cursor creation
 sql=""
 x=1
-querySelected = st.selectbox(
-   ":red[**Select your Query**] :point_down: ",
-   ("1. What are the names of all the videos and their corresponding channels?", 
-    "2. Which channels have the most number of videos, and how many videos do they have?", 
-    "3. What are the top 10 most viewed videos and their respective channels?",
-    "4. How many comments were made on each video, and what are their corresponding video names?", 
-    "5. Which videos have the highest number of likes, and what are their corresponding channel names?", 
-    "6. What is the total number of likes and dislikes for each video, and what are their corresponding video names?",
-    "7. What is the total number of views for each channel, and what are their corresponding channel names?", 
-    "8. What are the names of all the channels that have published videos in the year 2022?", 
-    "9. What is the average duration of all videos in each channel, and what are their corresponding channel names?",
-    "10.Which videos have the highest number of comments, and what are their corresponding channel names?",
-    "Chart for 3. What are the top 10 most viewed videos and their respective channels?",
-    "Chart for 7. What is the total number of views for each channel, and what are their corresponding channel names?",
-    "Chart for 9. What is the average duration of all videos in each channel, and what are their corresponding channel names?"),
-   placeholder="Select Your Query Here ...",
-)
-
-mycursor.execute("Show tables;") 
+mycursor.execute("SHOW TABLES")
 myresult = mycursor.fetchall()
 if len(myresult)==0:
     st.write(":red[No Deta Availabl to Display]")
 else:
+
+    querySelected = st.selectbox(
+    ":red[**Select your Query**] :point_down: ",
+    ("1. What are the names of all the videos and their corresponding channels?", 
+        "2. Which channels have the most number of videos, and how many videos do they have?", 
+        "3. What are the top 10 most viewed videos and their respective channels?",
+        "4. How many comments were made on each video, and what are their corresponding video names?", 
+        "5. Which videos have the highest number of likes, and what are their corresponding channel names?", 
+        "6. What is the total number of likes and dislikes for each video, and what are their corresponding video names?",
+        "7. What is the total number of views for each channel, and what are their corresponding channel names?", 
+        "8. What are the names of all the channels that have published videos in the year 2022?", 
+        "9. What is the average duration of all videos in each channel, and what are their corresponding channel names?",
+        "10.Which videos have the highest number of comments, and what are their corresponding channel names?",
+        "Chart for 3. What are the top 10 most viewed videos and their respective channels?",
+        "Chart for 7. What is the total number of views for each channel, and what are their corresponding channel names?",
+        "Chart for 9. What is the average duration of all videos in each channel, and what are their corresponding channel names?"),
+    placeholder="Select Your Query Here ...",
+    )
+
 
     if querySelected == "1. What are the names of all the videos and their corresponding channels?":
         x =1
@@ -96,7 +97,6 @@ else:
     elif querySelected =="Chart for 9. What is the average duration of all videos in each channel, and what are their corresponding channel names?":
         x=13
         sql = "SELECT ROUND(AVG(TIME_TO_SEC(Video.duration))) AS Duration , Channel.channel_name AS ChannelName FROM Video INNER JOIN Channel ON Video.video_channelID  = Channel.channel_id GROUP BY Video.video_channelID"
-
 
     
 mycursor.execute(sql)
