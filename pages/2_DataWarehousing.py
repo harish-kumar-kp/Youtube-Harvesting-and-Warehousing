@@ -41,46 +41,56 @@ def channelData(channel_id):
 
 def playlistIdDetails(channel_id):
     #This  Function takes the Channel Id and Return the Channel id, Playlist_id and playList names of the channel as a dictionary   with the keys of channel_id , playList_id , playList_Name
-    pl_request = youtube.playlists().list(
-                                        part="contentDetails,snippet",
-                                        channelId=channel_id,
-                                        maxResults=50)
-    pl_response = pl_request.execute()
-    plLstId = []
-    plstName = []
-    x=0
-    for plItem in pl_response['items']:
-        plLstId.append(str(plItem['id']))
-        plstName.append(str(pl_response['items'][x]['snippet']['title'])) 
-        x=x+1
-    data = {"channel_id": channel_id,"playList_id":plLstId ,"playList_Name":plstName ,"playListCount" :len(plLstId)}
+    nextPageToken = None
+    totPlLstId = []
+    totPlstName = []
+    while True:   
+        pl_request = youtube.playlists().list(
+                                            part="contentDetails,snippet",
+                                            channelId=channel_id,
+                                            maxResults=50,pageToken=nextPageToken)
+
+        pl_response = pl_request.execute()
+        plLstId = []
+        plstName = []
+        for plItem in pl_response['items']:
+            plLstId.append(str(plItem['id']))
+            plstName.append(str(pl_response['items'][pl_response['items'].index(plItem)]['snippet']['title'])) 
+        totPlLstId.extend(plLstId)
+        totPlstName.extend(plstName)     
+        nextPageToken = pl_response.get('nextPageToken')
+        if not nextPageToken:
+            break
+    data = {"channel_id": channel_id,"playList_id":totPlLstId ,"playList_Name":totPlstName ,"playListCount" :len(totPlLstId)}
     return data
 
 def videoIdGen(playLsId):
     # video_details fetching by playlist as input
-    vid_request = youtube.playlistItems().list(
-                                            part="contentDetails",
-                                            playlistId = playLsId , 
-                                            maxResults=50)
-    vid_response = vid_request.execute()
-    VID_data = vid_response
-    vid_Lst = []
-    vid_count = int(len(VID_data['items']))
-    for i in range(0 , vid_count ) :
-        vid = VID_data['items'][i]['contentDetails']['videoId']
-        if len(vid_Lst) == 0:
-                vid_Lst.append(vid)
-        else:
-            if vid in vid_Lst:
-                continue 
-            else:   
-                vid_Lst.append(vid)
-    vidId_CSV = ",".join(vid_Lst)
-    data = {"videoID":vidId_CSV , "videoCountThisPL" :vid_count ,"playListID" :playLsId }
-    return data
+    nextPageToken = None
+    x=0
+    totData = []
+    while True:    
+        vid_request = youtube.playlistItems().list(
+                                                part="contentDetails",
+                                                maxResults=50,
+                                                playlistId = playLsId , pageToken = nextPageToken)                           
+        vid_response = vid_request.execute()
+        vid_Lst = []
+        for VidPlItem in vid_response['items'] :
+            vid = vid_response['items'][vid_response['items'].index(VidPlItem)]['contentDetails']['videoId']
+            vid_Lst.append(vid)
+            vidId_CSV = ",".join(vid_Lst)
+        x+=1
+        #print(x)
+        data = {"videoID":vidId_CSV ,"playListID" :playLsId , "vid_IDsCount":len(vid_response['items']),"pageIndex":x }
+        totData.append(data)
+        nextPageToken = vid_response.get('nextPageToken')
+        if not nextPageToken:
+            break
+    return totData
 
 def videoInfo(vid):
-    # with video_id as input we can get video details
+    # In this Function with video_id as input we can get video details
     vdo_request = youtube.videos().list(
                                         part="contentDetails,snippet,statistics",
                                         id = vid,
@@ -88,27 +98,39 @@ def videoInfo(vid):
     vdo_response = vdo_request.execute()
     return vdo_response
 
-def commentDataScrape(vid_ID):
-    # This Function takes video id and returns all the comment Data
-    com_request = youtube.commentThreads().list( 
-                                                part = "snippet", 
-                                                videoId = vid_ID ,
-                                                maxResults=100)
-    com_response = com_request.execute()
+def commentDataScrape(video_id):
+    # This Function takes video id and returns all the comment Data    
+    com_response=youtube.commentThreads().list(
+    part='snippet',
+    videoId=video_id
+    ).execute()
     commentIDLst =[] 
     commentTXTLst =[] 
     commentAuthorLst =[]
     commentPublishLst = []
-    for item in com_response['items']:
-        commentID = item['snippet']['topLevelComment']['etag']
-        commentIDLst.append(commentID)
-        commentTXT = item['snippet']['topLevelComment']['snippet']['textDisplay']
-        commentTXTLst.append(commentTXT)
-        commentAuthor = item['snippet']['topLevelComment']['snippet']['authorDisplayName']
-        commentAuthorLst.append(commentAuthor)
-        commentPublish = item['snippet']['topLevelComment']['snippet']['publishedAt']
-        commentPublishLst.append(commentPublish)
-    commentData ={"videoID":vid_ID ,"commentID":commentIDLst,"comment_Text":commentTXTLst ,"comment_Author":commentAuthorLst ,"comment_PublishDate":commentPublishLst }
+    # iterate video response
+    while com_response:
+        # extracting required info
+        # from each result object 
+        for item in com_response['items']:
+            commentID = item['id']
+            commentIDLst.append(commentID)
+            commentTXT = item['snippet']['topLevelComment']['snippet']['textDisplay']
+            commentTXTLst.append(commentTXT)
+            commentAuthor = item['snippet']['topLevelComment']['snippet']['authorDisplayName']
+            commentAuthorLst.append(commentAuthor)
+            commentPublish = item['snippet']['topLevelComment']['snippet']['publishedAt']
+            commentPublishLst.append(commentPublish)
+        commentData ={"videoID":video_id ,"commentID":commentIDLst,"comment_Text":commentTXTLst ,"comment_Author":commentAuthorLst ,"comment_PublishDate":commentPublishLst }
+        # Again repeat
+        if 'nextPageToken' in com_response:
+            com_response = youtube.commentThreads().list(
+                    part = 'snippet',
+                    videoId = video_id,
+                      pageToken = com_response['nextPageToken']
+                ).execute()
+        else:
+            break
     return commentData
 
 def channelDataBase(channel_id):
@@ -152,58 +174,65 @@ def dateTimeFormat(inputString):
 def videoDatabase(channel_id):
     #This function takes the channel id as input and takes all the multiple playlist id s  later multiple  video id s at once later multiple coments data utilizing minimum API responses and process them to thiet corossponing SQL Tables
     vidList=[]
+    comList=[]
     mycursor.execute("CREATE TABLE IF NOT EXISTS Playlist (playList_id VARCHAR(255),Channel_id VARCHAR(255), playList_name VARCHAR(255), PRIMARY KEY(playList_id) )")
     mycursor.execute("CREATE TABLE IF NOT EXISTS Video (video_id VARCHAR(255),playList_id VARCHAR(255), video_name VARCHAR(255),video_channelID VARCHAR(255),video_description TEXT ,published_date DATETIME ,view_count INT ,like_count INT,dislike_count INT ,favourite_count INT,comment_count INT,duration INT,thumb_nail VARCHAR(255),caption_status VARCHAR(255),PRIMARY KEY(video_id) )")
     mycursor.execute("CREATE TABLE IF NOT EXISTS Comment (comment_id VARCHAR(255) , video_id VARCHAR(255) , comment_text TEXT ,comment_autor VARCHAR(255), comment_publish_date DATETIME , PRIMARY KEY(comment_id) )")
-    plaList = playlistIdDetails(channel_id)
-    for i in range(0,plaList['playListCount']):
-        chanId =str(channel_id) 
-        playLisId =str(plaList['playList_id'][i])
-        playLisName =str(plaList['playList_Name'][i])
-        Plsql = "INSERT INTO Playlist (playList_id, Channel_id , playList_name ) VALUES (%s, %s ,%s )"
-        Plval = (playLisId , chanId ,playLisName )
-        mycursor.execute(Plsql, Plval)
-        #vidIds = videoIdGen(playLisId)['videoID']
-        vidData = videoInfo(videoIdGen(playLisId)['videoID'])
-        vidIdsCoun = len(vidData['items'])
-        for i in range (0 , vidIdsCoun):
-            vidId = vidData['items'][i]['id']
-            if len(vidList) == 0:
-                vidList.append(vidId)
-            else:
-                if vidId in vidList:
-                    continue 
-                else:   
-                    vidList.append(vidId)          
-                    vidTitle = vidData['items'][i]['snippet']['title']
-                    vidChanId = vidData['items'][i]['snippet']['channelId']
-                    vidDesc = vidData['items'][i]['snippet']['description']
-                    vidPub = dateTimeFormat(vidData['items'][i]['snippet']['publishedAt'])
-                    vidvieCnt =vidData['items'][i]['statistics']['viewCount']
-                    vidLike = vidData['items'][i]['statistics']['likeCount']
-                    vidDislike = int(0)# this Feature is discarded from youtube since 2021
-                    vidFav = vidData['items'][i]['statistics']['favoriteCount']
-                    vidCmnt = vidData['items'][i]['statistics']['commentCount']
-                    vidDur = duration2Seconds(vidData['items'][i]['contentDetails']['duration'])
-                    vidThum = vidData['items'][i]['snippet']['thumbnails']['default']['url']
-                    vidCap = vidData['items'][i]['contentDetails']['caption']
-                    #print( vidId , vidTitle , vidDesc , vidPub , vidvieCnt , vidLike  , vidDislike , vidFav , vidCmnt , vidDur , vidThum , vidCap, playLisId )
-                    Vidsql = "INSERT INTO Video (video_id ,playList_id , video_name ,video_channelID,video_description  ,published_date ,view_count ,like_count ,dislike_count ,favourite_count ,comment_count ,duration ,thumb_nail ,caption_status) VALUES (%s, %s ,%s,%s, %s ,%s,%s, %s ,%s,%s, %s ,%s,%s,%s )"
-                    Vidval = (vidId , playLisId ,vidTitle,vidChanId ,vidDesc ,vidPub ,vidvieCnt ,vidLike ,vidDislike ,vidFav , vidCmnt, vidDur, vidThum , vidCap )
-                    mycursor.execute(Vidsql, Vidval)
+    playListDict = playlistIdDetails(channel_id)# multi - UC52UDT2S6tk0-4ImaeOHI1Q single - UCFpL0H8QuHOjDgA_ccObAug
+    x=0
+    for items in playListDict['playList_id'] :
+        playlistID = playListDict['playList_id'][playListDict['playList_id'].index(items)]
+        allVidIds = videoIdGen(playlistID)
+        for items in allVidIds:
+            videoInfoLD = videoInfo(allVidIds[allVidIds.index(items)]['videoID'])
+            #vidId = videoInfoLD['items'][0]['id']
+            for vidDat in videoInfoLD['items']:
+                vidId = vidDat['id']
+                if len(vidList) == 0:
+                    vidList.append("dummyVideoId")
+                else:
+                    if vidId in vidList:
+                        continue 
+                    else: 
+                        vidList.append(vidId) 
+                        vidTitle = vidDat['snippet']['title']
+                        vidChanId = vidDat['snippet']['channelId']
+                        vidDesc = vidDat['snippet']['description']
+                        vidPub = dateTimeFormat(vidDat['snippet']['publishedAt'])
+                        vidvieCnt = vidDat['statistics']['viewCount']
+                        vidLike = vidDat['statistics']['likeCount']
+                        vidDislike = int(0)# this Feature is discarded from youtube since 2021
+                        vidFav = vidDat['statistics']['favoriteCount']
+                        vidCmnt = vidDat['statistics']['commentCount']
+                        vidDur = duration2Seconds(vidDat['contentDetails']['duration'])
+                        vidThum = vidDat['snippet']['thumbnails']['default']['url']
+                        vidCap = vidDat['contentDetails']['caption']
+                        Vidsql = "INSERT INTO Video (video_id ,playList_id , video_name ,video_channelID,video_description  ,published_date ,view_count ,like_count ,dislike_count ,favourite_count ,comment_count ,duration ,thumb_nail ,caption_status) VALUES (%s, %s ,%s,%s, %s ,%s,%s, %s ,%s,%s, %s ,%s,%s,%s )"
+                        Vidval = (vidId , playlistID ,vidTitle,vidChanId ,vidDesc ,vidPub ,vidvieCnt ,vidLike ,vidDislike ,vidFav , vidCmnt, vidDur, vidThum , vidCap )
+                        mycursor.execute(Vidsql, Vidval)
                     
-                    cmment=commentDataScrape(vidId)
-                    for i in range(0 , int(len(cmment['commentID']))):
-                        videId = str(cmment['videoID'] )
-                        commentId = str(cmment['commentID'][i])
-                        commentTxt = str(cmment['comment_Text'][i])
-                        commentAuthor = str(cmment['comment_Author'][i])
-                        commentPublishDate = dateTimeFormat(cmment['comment_PublishDate'][i])
-                        #print( videoId ,commentId , commentTxt , commentAuthor , commentPublishDate)   
-                        cmntsql = "INSERT INTO Comment (comment_id  , video_id , comment_text ,comment_autor , comment_publish_date ) VALUES (%s, %s ,%s,%s ,%s)"
-                        cmntval = (commentId , videId ,commentTxt,commentAuthor ,commentPublishDate )
-                        mycursor.execute(cmntsql, cmntval)
+                        cmmentsLD=commentDataScrape(vidId)
+                        x=0
+                        for item in cmmentsLD['commentID']:
+                            commentId = str(cmmentsLD['commentID'][x]) 
+                            videId = str(vidId)
+                            if len(comList) == 0:
+                                comList.append("dummyCommentId")
+                            else:
+                                if commentId in comList:
+                                    continue 
+                                else:
+                                    commentId = str(cmmentsLD['commentID'][x]) 
+                                    commentTxt = str(cmmentsLD['comment_Text'][cmmentsLD['commentID'].index(item)])
+                                    commentAuthor = str(cmmentsLD['comment_Author'][x])
+                                    commentPublishDate = dateTimeFormat(cmmentsLD['comment_PublishDate'][x]) 
+                                    x=x+1
+                                    cmntsql = "INSERT INTO Comment (comment_id  , video_id , comment_text ,comment_autor , comment_publish_date ) VALUES (%s, %s ,%s,%s ,%s)"
+                                    cmntval = (commentId , videId ,commentTxt,commentAuthor ,commentPublishDate )
+                                    mycursor.execute(cmntsql, cmntval)
+
     vidList.clear()
+    comList.clear()
     status=1
     return status
     
@@ -257,12 +286,12 @@ try:
                     #st.write(chStatus)
                 else:
                     errorStatement="Data Integrety Error From The source , Please try this ID after some time"
-                    #st.write(chStatus)
+                    st.write(chStatus)
             elif gate==0:
                 st.write("The Channel ID is Entered Already , Please try next ID")
 except: 
         # Prevent the error from propagating into your Streamlit app.
-        st.write(errorStatement)
+        #st.write(errorStatement)
         pass
 
 #view = st.button("View Tables")
