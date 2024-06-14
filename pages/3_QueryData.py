@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 st.set_page_config(page_title = "Youtube Data on Streamlit")
-st.header("DataWarehousing", divider='rainbow')
+st.header("Query Data", divider='rainbow')
 import os
 import googleapiclient.discovery
 import re
