@@ -1,22 +1,11 @@
 import streamlit as st
 st.set_page_config(page_title = "Youtube Data on Streamlit")
-st.header("DataHarvesting", divider='rainbow')
+st.header("Data Harvesting", divider='rainbow')
 import os
 import googleapiclient.discovery
 import re
 import data_IO 
-
 fileConfig = data_IO.config()
-import mysql.connector 
-# Python MySQL connection
-db = mysql.connector.connect(
-    host =fileConfig["key1"],
-    user = fileConfig["key2"],
-    passwd = fileConfig["key3"],
-    database = fileConfig["key4"]
-)
-#creating cursor object
-mycursor = db.cursor()
 
 api_service_name = "youtube"
 api_version = "v3"
@@ -24,8 +13,6 @@ apiKey = fileConfig["key5"]
 youtube = googleapiclient.discovery.build(api_service_name, 
                                           api_version,
                                           developerKey=apiKey)
-
-
 def channeDetails(channel_id):
  # This  Function takes the Channel Id and Return the Channel Name,type,ViewCount ,Descripion and status of the channel    
     request = youtube.channels().list(
