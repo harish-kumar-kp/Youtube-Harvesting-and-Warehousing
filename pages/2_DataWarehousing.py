@@ -90,7 +90,7 @@ def videoIdGen(playLsId):
     return totData
 
 def videoInfo(vid):
-    # In this Function with video_id as input we can get video details
+    # with video_id as input we can get video details
     vdo_request = youtube.videos().list(
                                         part="contentDetails,snippet,statistics",
                                         id = vid,
@@ -136,12 +136,34 @@ def commentDataScrape(video_id):
 def channelDataBase(channel_id):
     # This Function takes output of channelData() function and process the data which is suitable to store in SQL table "Channel" 
     ch_data = (channelData(channel_id))
-    chId = str(ch_data['channel_id'])
-    chNam =str(ch_data['channel_name'])
-    chTyp = " , ".join(ch_data['channel_type'][0:255])
-    chVc = int(ch_data['channel_viewCnt'])
-    chDes = str(ch_data['channesl_dec'][0:255])
-    chSta = str(ch_data['channel_status'])
+    try:  
+        chId = str(ch_data['channel_id'])
+    except:
+        chId = "MissingData"
+
+    try:  
+        chNam =str(ch_data['channel_name'])
+    except:
+        chNam = "MissingData"
+    try:  
+        chTyp = " , ".join(ch_data['channel_type'][0:255])
+    except:
+        chTyp = "MissingData"
+    try:  
+        chVc = int(ch_data['channel_viewCnt'])
+    except:
+        chVc = 0 
+    try:  
+        chDes = str(ch_data['channesl_dec'][0:255])    
+    except:
+        chDes = "MissingData"   
+    try:  
+        chSta = str(ch_data['channel_status'])   
+    except:
+        chSta = "MissingData"             
+    
+    
+    
     mycursor.execute("CREATE TABLE IF NOT EXISTS Channel (channel_id VARCHAR(255), channel_name VARCHAR(255) ,channel_type VARCHAR(255) ,channel_views INT UNSIGNED,channel_description LONGTEXT ,channel_status VARCHAR(255), PRIMARY KEY(channel_id) )")
     sql = "INSERT INTO Channel (channel_id, channel_name , channel_type, channel_views ,channel_description , channel_status) VALUES (%s, %s ,%s ,%s, %s ,%s)"
     val = (chId , chNam ,chTyp , chVc, chDes,chSta )
@@ -187,6 +209,7 @@ def videoDatabase(channel_id):
             videoInfoLD = videoInfo(allVidIds[allVidIds.index(items)]['videoID'])
             #vidId = videoInfoLD['items'][0]['id']
             for vidDat in videoInfoLD['items']:
+                #print(x , vidDat['id'])
                 vidId = vidDat['id']
                 if len(vidList) == 0:
                     vidList.append("dummyVideoId")
@@ -194,19 +217,55 @@ def videoDatabase(channel_id):
                     if vidId in vidList:
                         continue 
                     else: 
-                        vidList.append(vidId) 
-                        vidTitle = vidDat['snippet']['title']
-                        vidChanId = vidDat['snippet']['channelId']
-                        vidDesc = vidDat['snippet']['description']
-                        vidPub = dateTimeFormat(vidDat['snippet']['publishedAt'])
-                        vidvieCnt = vidDat['statistics']['viewCount']
-                        vidLike = vidDat['statistics']['likeCount']
+                        vidList.append(vidId)
+                        try:  
+                            vidTitle = vidDat['snippet']['title']
+                        except: 
+                            vidTitle = "MissingData"
+                        try:
+                            vidChanId = vidDat['snippet']['channelId']
+                        except:   
+                            vidChanId = "MissingData"
+                        try:
+                            vidDesc = vidDat['snippet']['description']
+                        except: 
+                            vidDesc = "MissingData"
+                        try:
+                            vidPub = dateTimeFormat(vidDat['snippet']['publishedAt'])
+                        except: 
+                            vidPub = "MissingData"
+                        try:
+                            vidvieCnt = vidDat['statistics']['viewCount']
+                        except: 
+                            vidvieCnt = 0
+                        try:
+                            vidLike = vidDat['statistics']['likeCount']
+                        except: 
+                            vidLike = 0
                         vidDislike = int(0)# this Feature is discarded from youtube since 2021
-                        vidFav = vidDat['statistics']['favoriteCount']
+                        try:
+                            vidFav = vidDat['statistics']['favoriteCount']
+                        except: 
+                            vidFav = 0
                         vidCmnt = vidDat['statistics']['commentCount']
+                        try:
+                            vidCmnt = vidDat['statistics']['commentCount']
+                        except: 
+                            vidCmnt = 0
                         vidDur = duration2Seconds(vidDat['contentDetails']['duration'])
-                        vidThum = vidDat['snippet']['thumbnails']['default']['url']
-                        vidCap = vidDat['contentDetails']['caption']
+                        try:
+                            vidDur = duration2Seconds(vidDat['contentDetails']['duration'])
+                        except: 
+                            vidDur = 0
+                        try:
+                            vidThum = vidDat['snippet']['thumbnails']['default']['url']
+                        except: 
+                            vidThum = "MissingData"
+                        try:
+                            vidCap = vidDat['contentDetails']['caption']
+                        except: 
+                            vidCap = "MissingData"
+                        #print( vidId , vidTitle , vidDesc , vidPub , vidvieCnt , vidLike  , vidDislike , vidFav , vidCmnt , vidDur , vidThum , vidCap, vidChanId )
                         Vidsql = "INSERT INTO Video (video_id ,playList_id , video_name ,video_channelID,video_description  ,published_date ,view_count ,like_count ,dislike_count ,favourite_count ,comment_count ,duration ,thumb_nail ,caption_status) VALUES (%s, %s ,%s,%s, %s ,%s,%s, %s ,%s,%s, %s ,%s,%s,%s )"
                         Vidval = (vidId , playlistID ,vidTitle,vidChanId ,vidDesc ,vidPub ,vidvieCnt ,vidLike ,vidDislike ,vidFav , vidCmnt, vidDur, vidThum , vidCap )
                         mycursor.execute(Vidsql, Vidval)
@@ -222,10 +281,24 @@ def videoDatabase(channel_id):
                                 if commentId in comList:
                                     continue 
                                 else:
-                                    commentId = str(cmmentsLD['commentID'][x]) 
-                                    commentTxt = str(cmmentsLD['comment_Text'][cmmentsLD['commentID'].index(item)])
-                                    commentAuthor = str(cmmentsLD['comment_Author'][x])
-                                    commentPublishDate = dateTimeFormat(cmmentsLD['comment_PublishDate'][x]) 
+                                    comList.append(commentId)
+                                    try:
+                                        commentId = str(cmmentsLD['commentID'][x]) 
+                                    except:
+                                        commentId = "MissingData" 
+                                    try:
+                                        commentTxt = str(cmmentsLD['comment_Text'][cmmentsLD['commentID'].index(item)])
+                                    except:    
+                                        commentTxt = "MissingData" 
+                                    try:      
+                                        commentAuthor = str(cmmentsLD['comment_Author'][x])
+                                    except:
+                                        commentAuthor = "MissingData"
+                                    try: 
+                                        commentPublishDate = dateTimeFormat(cmmentsLD['comment_PublishDate'][x])
+                                    except:
+                                        commentPublishDate = "MissingData"
+                                    #print(videId, commentId , commentTxt , commentAuthor , commentPublishDate)   
                                     x=x+1
                                     cmntsql = "INSERT INTO Comment (comment_id  , video_id , comment_text ,comment_autor , comment_publish_date ) VALUES (%s, %s ,%s,%s ,%s)"
                                     cmntval = (commentId , videId ,commentTxt,commentAuthor ,commentPublishDate )
@@ -292,7 +365,10 @@ try:
 except: 
         # Prevent the error from propagating into your Streamlit app.
         #st.write(errorStatement)
-        pass
+        st.write("Data Integrety Error From The source , Please try next chnnel ID ")
+        Click = st.button("Continue")
+        if submit:
+                pass
 
 #view = st.button("View Tables")
 #if view:    
