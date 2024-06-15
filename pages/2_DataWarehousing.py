@@ -10,10 +10,10 @@ import re
 import mysql.connector 
 # Python MySQL connection
 db = mysql.connector.connect(
-    host =fileConfig["key1"],
-    user = fileConfig["key2"],
-    passwd = fileConfig["key3"],
-    database = fileConfig["key4"]
+    host =fileConfig["key1"],  #can be changed with own your Values as well
+    user = fileConfig["key2"],  #can be changed with own your Values as well
+    passwd = fileConfig["key3"],  #can be changed with own your Values as well
+    database = fileConfig["key4"]  #can be changed with own your Values as well
 )
 
 #creating cursor object
@@ -22,7 +22,7 @@ mycursor = db.cursor()
 api_service_name = "youtube"
 api_version = "v3"
 
-apiKey =fileConfig["key5"]
+apiKey =fileConfig["key5"]  #can be changed with own your Values as well
 youtube = googleapiclient.discovery.build(api_service_name, 
                                           api_version,
                                           developerKey=apiKey)
