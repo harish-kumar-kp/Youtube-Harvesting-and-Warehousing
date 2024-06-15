@@ -9,7 +9,7 @@ fileConfig = data_IO.config()
 
 api_service_name = "youtube"
 api_version = "v3"
-apiKey = fileConfig["key5"]
+apiKey = fileConfig["key5"] #can be changed with own your Values as well
 youtube = googleapiclient.discovery.build(api_service_name, 
                                           api_version,
                                           developerKey=apiKey)
