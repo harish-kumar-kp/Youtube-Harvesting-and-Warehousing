@@ -366,7 +366,7 @@ except:
         # Prevent the error from propagating into your Streamlit app.
         #st.write(errorStatement)
         st.write("Data Integrety Error From The source :pensive:")
-        Click = st.button("Please try next chnnel ID")
+        Click = st.button("Please try next channel ID")
         if submit:
                 pass
 
