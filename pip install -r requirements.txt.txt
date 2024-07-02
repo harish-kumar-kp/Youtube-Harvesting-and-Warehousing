@@ -1,0 +1,5 @@
+pip installmysql-connector-python
+pip install google-api-python-client
+pip install pandas
+pip install regex
+pip install streamlit
